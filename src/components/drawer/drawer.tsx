@@ -8,7 +8,6 @@ import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
-import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import React, { useMemo, useState } from 'react';
 import { NavListItem } from './elements/nav-list-item';
@@ -26,6 +25,7 @@ import {
   Stack,
   Toolbar,
   Tooltip,
+  useTheme,
 } from '@mui/material';
 
 import { useUserSession } from '@/hooks/use-user-session';

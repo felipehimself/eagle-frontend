@@ -1,8 +1,6 @@
-// import { createAxiosInstance } from '@/lib/axios';
-import { axiosInstanceExternal } from "@/lib/axios";
-import { ExtractFnReturnType, QueryConfig } from "@/lib/react-query";
-// import { Client } from "@/types";
-import { useQuery } from "react-query";
+import { axiosInstanceExternal } from '@/lib/axios';
+import { ExtractFnReturnType, QueryConfig } from '@/lib/react-query';
+import { useQuery } from 'react-query';
 
 const IBGE_BASE_URL: string = import.meta.env.CLIENT_IBGE_BASE_URL;
 
@@ -16,7 +14,7 @@ export type TMunicipio = {
   id: number;
   nome: string;
   microrregiao: TMicrorregiao;
-  "regiao-imediata": TRegiaoImediata;
+  'regiao-imediata': TRegiaoImediata;
 };
 
 export type TMicrorregiao = {
@@ -47,7 +45,7 @@ export type TRegiao = {
 export type TRegiaoImediata = {
   id: number;
   nome: string;
-  "regiao-intermediaria": TRegiaoIntermediaria;
+  'regiao-intermediaria': TRegiaoIntermediaria;
 };
 
 export type TRegiaoIntermediaria = {
@@ -57,7 +55,7 @@ export type TRegiaoIntermediaria = {
 };
 
 export const getMunicipiosByUFId = async (
-  id: number
+  id: number,
 ): Promise<TMunicipioBase[]> => {
   const axios = axiosInstanceExternal(IBGE_BASE_URL);
   return axios.get(`/localidades/estados/${id}/municipios`);
@@ -76,7 +74,7 @@ export const useGetMunicipiosByUFId = ({
 }: UseGetMunicipiosByIdOptions) => {
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     ...config,
-    queryKey: ["useGetMunicipiosByUFId", id],
+    queryKey: ['useGetMunicipiosByUFId', id],
     queryFn: () => getMunicipiosByUFId(id),
   });
 };

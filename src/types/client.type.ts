@@ -30,7 +30,7 @@ export type TClientResponse = Omit<
   TClient,
   'endereco' | 'pessoa' | 'regioesBaseId'
 > & {
-  // enderecos: TClientEndereco[];
+  cnpj?: string;
   pessoaTipo: {
     id: number;
     pessoaId: number;

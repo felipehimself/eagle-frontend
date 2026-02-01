@@ -1,14 +1,14 @@
 // theme.d.ts
-import { Palette, PaletteOptions } from "@mui/material/styles";
+// import { Palette, PaletteOptions } from "@mui/material/styles";
 
-declare module "@mui/material/styles" {
+declare module '@mui/material/styles' {
   interface PaletteColor {
     main: string;
     [key: number]: string;
   }
 
   interface Palette {
-    gray: Palette["primary"] & {
+    gray: Palette['primary'] & {
       main: string;
 
       // lighter?: string;
@@ -17,23 +17,23 @@ declare module "@mui/material/styles" {
       [key: number]: string;
     };
 
-    orange: Palette["primary"] & {
+    orange: Palette['primary'] & {
       main: string;
       [key: number]: string;
     };
 
-    yellow: Palette["primary"] & {
+    yellow: Palette['primary'] & {
       main: string;
       [key: number]: string;
     };
 
-    green: Palette["primary"] & {
+    green: Palette['primary'] & {
       main: string;
       [key: number]: string;
     };
   }
   interface PaletteOptions {
-    gray: Palette["primary"] & {
+    gray: Palette['primary'] & {
       main: string;
 
       // lighter?: string;
@@ -42,17 +42,17 @@ declare module "@mui/material/styles" {
       [key: number]: string;
     };
 
-    orange?: Palette["parimary"] & {
+    orange?: Palette['parimary'] & {
       main: string;
       [key: number]: string;
     };
 
-    yellow?: Palette["parimary"] & {
+    yellow?: Palette['parimary'] & {
       main: string;
       [key: number]: string;
     };
 
-    green?: Palette["parimary"] & {
+    green?: Palette['parimary'] & {
       main: string;
       [key: number]: string;
     };

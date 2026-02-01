@@ -51,25 +51,25 @@ const { AddClient } = lazyImport(
   'AddClient',
 );
 
-const { DriversRoutes } = lazyImport(
-  () => import('@/features/drivers'),
-  'DriversRoutes',
-);
+// const { DriversRoutes } = lazyImport(
+//   () => import('@/features/drivers'),
+//   'DriversRoutes',
+// );
 
-const { RegisteredDrivers } = lazyImport(
-  () => import('@/features/drivers/routes/registered-drivers'),
-  'RegisteredDrivers',
-);
+// const { RegisteredDrivers } = lazyImport(
+//   () => import('@/features/drivers/routes/registered-drivers'),
+//   'RegisteredDrivers',
+// );
 
-const { EditDriver } = lazyImport(
-  () => import('@/features/drivers/routes/edit-driver'),
-  'EditDriver',
-);
+// const { EditDriver } = lazyImport(
+//   () => import('@/features/drivers/routes/edit-driver'),
+//   'EditDriver',
+// );
 
-const { AddDriver } = lazyImport(
-  () => import('@/features/drivers/routes/add-driver'),
-  'AddDriver',
-);
+// const { AddDriver } = lazyImport(
+//   () => import('@/features/drivers/routes/add-driver'),
+//   'AddDriver',
+// );
 
 const { VehiclesRoutes } = lazyImport(
   () => import('@/features/vehicles'),
@@ -91,20 +91,20 @@ const { EditVehicle } = lazyImport(
   'EditVehicle',
 );
 
-const { RoutesRoutes } = lazyImport(
-  () => import('@/features/routes'),
-  'RoutesRoutes',
-);
+// const { RoutesRoutes } = lazyImport(
+//   () => import('@/features/routes'),
+//   'RoutesRoutes',
+// );
 
-const { RegisteredRoutes } = lazyImport(
-  () => import('@/features/routes/routes/registered-routes'),
-  'RegisteredRoutes',
-);
+// const { RegisteredRoutes } = lazyImport(
+//   () => import('@/features/routes/routes/registered-routes'),
+//   'RegisteredRoutes',
+// );
 
-const { AddRoute } = lazyImport(
-  () => import('@/features/routes/routes/add-route'),
-  'AddRoute',
-);
+// const { AddRoute } = lazyImport(
+//   () => import('@/features/routes/routes/add-route'),
+//   'AddRoute',
+// );
 
 const { RegionsRoutes } = lazyImport(
   () => import('@/features/regions/routes'),
@@ -136,25 +136,25 @@ const { EditRegion } = lazyImport(
 //   'ClientsReport'
 // );
 
-const { TariffsRoutes } = lazyImport(
-  () => import('@/features/tariff/routes'),
-  'TariffsRoutes',
-);
+// const { TariffsRoutes } = lazyImport(
+//   () => import('@/features/tariff/routes'),
+//   'TariffsRoutes',
+// );
 
-const { RegisteredTariffs } = lazyImport(
-  () => import('@/features/tariff/routes/registered-tariffs'),
-  'RegisteredTariffs',
-);
+// const { RegisteredTariffs } = lazyImport(
+//   () => import('@/features/tariff/routes/registered-tariffs'),
+//   'RegisteredTariffs',
+// );
 
-const { AddTariff } = lazyImport(
-  () => import('@/features/tariff/routes/add-tariff'),
-  'AddTariff',
-);
+// const { AddTariff } = lazyImport(
+//   () => import('@/features/tariff/routes/add-tariff'),
+//   'AddTariff',
+// );
 
-const { EditTariff } = lazyImport(
-  () => import('@/features/tariff/routes/edit-tariff'),
-  'EditTariff',
-);
+// const { EditTariff } = lazyImport(
+//   () => import('@/features/tariff/routes/edit-tariff'),
+//   'EditTariff',
+// );
 
 export const AppRoutesConfig: RouteObject[] = [
   {
@@ -193,15 +193,15 @@ export const AppRoutesConfig: RouteObject[] = [
               { path: 'cadastrar', element: <AddClient /> },
             ],
           },
-          {
-            path: 'motoristas',
-            element: <DriversRoutes />,
-            children: [
-              { path: 'cadastros', element: <RegisteredDrivers /> },
-              { path: 'editar/:id', element: <EditDriver /> },
-              { path: 'cadastrar', element: <AddDriver /> },
-            ],
-          },
+          // {
+          //   path: 'motoristas',
+          //   element: <DriversRoutes />,
+          //   children: [
+          //     { path: 'cadastros', element: <RegisteredDrivers /> },
+          //     { path: 'editar/:id', element: <EditDriver /> },
+          //     { path: 'cadastrar', element: <AddDriver /> },
+          //   ],
+          // },
           {
             path: 'veiculos',
             element: <VehiclesRoutes />,
@@ -211,14 +211,14 @@ export const AppRoutesConfig: RouteObject[] = [
               { path: 'cadastrar', element: <AddVehicle /> },
             ],
           },
-          {
-            path: 'rotas',
-            element: <RoutesRoutes />,
-            children: [
-              { path: 'cadastrar', element: <AddRoute /> },
-              { path: 'buscar', element: <RegisteredRoutes /> },
-            ],
-          },
+          // {
+          //   path: 'rotas',
+          //   element: <RoutesRoutes />,
+          //   children: [
+          //     { path: 'cadastrar', element: <AddRoute /> },
+          //     { path: 'buscar', element: <RegisteredRoutes /> },
+          //   ],
+          // },
           {
             path: 'regioes',
             element: <RegionsRoutes />,
@@ -235,15 +235,15 @@ export const AppRoutesConfig: RouteObject[] = [
           //   children: [{ path: 'clientes', element: <ClientsReport /> }],
           // },
 
-          {
-            path: 'tarifario',
-            element: <TariffsRoutes />,
-            children: [
-              { path: 'repasses', element: <RegisteredTariffs /> },
-              { path: 'cadastrar', element: <AddTariff /> },
-              { path: 'editar/:id', element: <EditTariff /> },
-            ],
-          },
+          // {
+          //   path: 'tarifario',
+          //   element: <TariffsRoutes />,
+          //   children: [
+          //     { path: 'repasses', element: <RegisteredTariffs /> },
+          //     { path: 'cadastrar', element: <AddTariff /> },
+          //     { path: 'editar/:id', element: <EditTariff /> },
+          //   ],
+          // },
         ],
       },
     ],
