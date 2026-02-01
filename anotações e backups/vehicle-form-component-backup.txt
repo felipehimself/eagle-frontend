@@ -1,0 +1,1267 @@
+import { useGetCardBrands } from '@/api/get-car-brands';
+import { useGetCategoriasMeli } from '@/api/get-categorias-meli';
+import { useGetClients } from '@/api/get-clients';
+import { useGetLocadoras } from '@/api/get-locadoras';
+import { useGetRegions } from '@/api/get-regions';
+import { useGetTiposVeiculo } from '@/api/get-tipos-veiculos.ts';
+import { useGetTiposVinculo } from '@/api/get-tipos-vinculo';
+import { useGetUFs } from '@/api/get-ufs';
+import {
+  AutocompleteShowNameGetId,
+  CNPJInput,
+  DateInput,
+  ExpandRowDocs,
+  MoneyInput,
+  VisuallyHiddenInput,
+  YearInput,
+} from '@/components/elements';
+import { CustomTabPanel } from '@/components/elements/custom-tab-panel';
+import { CustomTabs } from '@/components/elements/custom-tabs';
+import { FormButtons } from '@/components/elements/form/form-buttons';
+import { TabsLoading } from '@/components/elements/tabs-loading';
+import {
+  CNPJ_LENGTH,
+  CPF_LENGTH,
+  STATUS_DO_VEICULO,
+  TIPO_DOCUMENTO,
+  TIPOS_MOTOR,
+  TRUE_OU_FALSE,
+} from '@/constants';
+import { TRegionSchema } from '@/features/regions/types/regions.type';
+import { useNotification } from '@/hooks/use-notification';
+// import { IMG_VEICULO_MOCK } from '@/mocks/imgs-veiculo';
+import { TFileContent } from '@/components/elements/expand-row-docs';
+import { CPFInput } from '@/components/elements/form/cpf-input';
+import { TFormComponent } from '@/types';
+import { validateImgSizes, validateImgTypes } from '@/utils';
+import { Formatter, initialValueTrueOrFalseField } from '@/utils/common';
+import { zodResolver } from '@hookform/resolvers/zod';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import {
+  Button,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Skeleton,
+  Stack,
+  TextField,
+} from '@mui/material';
+import { nanoid } from 'nanoid';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { TABS_VALUES_VEHICLE } from '../constants';
+import { TVehicleSchema, vehicleSchema } from '../types/vehicle.type';
+
+// const { data: tiposDeServico, isLoading: isLoadingTiposDeServico } =
+//   useGetTiposServico({});
+
+const f = new Formatter();
+
+export const VehicleFormComponent = (props: TFormComponent<TVehicleSchema>) => {
+  const [tabValue, setTabValue] = useState(0);
+  const [veiculoImgsFile, setVeiculoImgsFile] = useState<File[]>([]);
+  const [imagesPreview, setImagesPreview] = useState<TFileContent[]>([]);
+
+  const [crlvFiles, setCrlvFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    const urls = veiculoImgsFile.map((file) => URL.createObjectURL(file));
+    const imgs = urls.map((img) => {
+      return { id: nanoid(), url: img };
+    });
+    setImagesPreview((prev) => [...prev, ...imgs]);
+
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [veiculoImgsFile]);
+
+  const toaster = useNotification();
+
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+    setValue,
+    getValues,
+    setError,
+    clearErrors,
+    watch,
+    reset,
+  } = useForm<TVehicleSchema>({
+    resolver: zodResolver(vehicleSchema),
+    defaultValues: props.initialData || {},
+  });
+
+  console.log('errors', errors);
+  // console.log('values', getValues());
+
+  const { data: locadoras, isLoading: isLoadingLocadoras } = useGetLocadoras({
+    config: {
+      select: (data) => {
+        const base = data.filter((l) => l.nome?.toUpperCase() != 'OUTROS');
+        const outros = data.find((l) => l.nome?.toUpperCase() == 'OUTROS')!;
+        const sorted = base.sort((a, b) => a.nome.localeCompare(b.nome));
+        return sorted.concat(outros);
+      },
+    },
+  });
+
+  const { data: categoriasMeli, isLoading: isLoadingCategoriasMeli } =
+    useGetCategoriasMeli({
+      config: {
+        select: (data) => {
+          return data.sort((a, b) => a.nome.localeCompare(b.nome));
+        },
+      },
+    });
+
+  const { data: ufs, isLoading: isLoadingUFs } = useGetUFs({});
+  const { data: marcasCarro, isLoading: isLoadingMarcasCarro } =
+    useGetCardBrands({
+      config: {
+        select: (data) => {
+          return data.sort((a, b) => a.nome.localeCompare(b.nome));
+        },
+      },
+    });
+
+  const { data: clientes, isLoading: isLoadingClientes } = useGetClients({});
+  const { data: regioesBase, isLoading: isLoadingRegioesBase } = useGetRegions(
+    {}
+  );
+  const { data: tiposVeiculo, isLoading: isLoadingTiposVeiculo } =
+    useGetTiposVeiculo({
+      config: {
+        select: (data) => {
+          return data.sort((a, b) => a.nome.localeCompare(b.nome));
+        },
+      },
+    });
+
+  const { data: tiposVinculo, isLoading: isLoadingTiposVinculo } =
+    useGetTiposVinculo({
+      config: {
+        select: (data) => {
+          return data.sort((a, b) => a.nome.localeCompare(b.nome));
+        },
+      },
+    });
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const resetForm = () => {
+    reset({});
+  };
+
+  const onSubmit = (data: TVehicleSchema) => {
+    const tipoDocumento = data.tipoDocumento;
+    const isCNPJ = tipoDocumento == 'CNPJ';
+
+    if (isCNPJ && data.cnpj?.length !== CNPJ_LENGTH) {
+      setError('cnpj', {
+        message: 'CNPJ inválido',
+      });
+      return;
+    } else {
+      clearErrors('cnpj');
+    }
+
+    if (!isCNPJ && data.cpf?.length !== CPF_LENGTH) {
+      setError('cpf', {
+        message: 'CPF inválido',
+      });
+      return;
+    } else {
+      clearErrors('cpf');
+    }
+
+    data.fotosVeiculo = veiculoImgsFile;
+    // console.log(data);
+    // return;
+    props.onSubmit(data, resetForm);
+  };
+
+  useEffect(() => {
+    if (props.initialData) {
+      reset(props.initialData);
+    }
+  }, [props.initialData, reset]);
+
+  const showTabsLoading = useMemo(() => {
+    return (
+      props.isLoading ||
+      isLoadingUFs ||
+      isLoadingMarcasCarro ||
+      isLoadingClientes ||
+      isLoadingRegioesBase ||
+      isLoadingTiposVeiculo ||
+      // isLoadingTiposDeServico ||
+      isLoadingLocadoras ||
+      isLoadingCategoriasMeli ||
+      isLoadingTiposVinculo
+    );
+  }, [
+    props.isLoading,
+    isLoadingUFs,
+    isLoadingMarcasCarro,
+    isLoadingClientes,
+    isLoadingRegioesBase,
+    isLoadingTiposVeiculo,
+    // isLoadingTiposDeServico,
+    isLoadingLocadoras,
+    isLoadingCategoriasMeli,
+    isLoadingTiposVinculo,
+  ]);
+
+  const shouldDisable = useMemo(() => {
+    return props.isSubmitting || props.shouldDisable;
+  }, [props.isSubmitting, props.shouldDisable]);
+
+  const tipoDoc = watch('tipoDocumento');
+
+  const renderTipoDoc = useCallback(() => {
+    if (tipoDoc === undefined) return <></>;
+
+    if (tipoDoc === 'CNPJ') {
+      return (
+        <CNPJInput
+          name='cnpj'
+          control={control}
+          label='XX.XXX.XXX/XXXX-XX'
+          disabled={shouldDisable}
+          required
+        />
+      );
+    }
+
+    return (
+      <CPFInput
+        name='cpf'
+        control={control}
+        label='XXX.XXX.XXX-XX'
+        disabled={shouldDisable}
+        required
+      />
+    );
+  }, [tipoDoc, control, shouldDisable]);
+
+  const onInvalid = () => {
+    const tipoDocumento = getValues('tipoDocumento');
+
+    if (tipoDocumento === 'CNPJ') {
+      setError('cnpj', { message: 'CNPJ inválido' });
+    }
+
+    if (tipoDocumento === 'CPF') {
+      setError('cpf', { message: 'CPF inválido' });
+    }
+  };
+
+  if (showTabsLoading) return <TabsLoading />;
+
+  // const uploadImage = async (file: File) => {
+  //   // const sigData = await getSignature();
+  //   // const formData = new FormData();
+  //   // formData.append("file", file);
+  //   // // formData.append("api_key", sigData.apiKey);
+  //   // // formData.append("timestamp", sigData.timestamp);
+  //   // // formData.append("signature", sigData.signature);
+  //   // const upload = await fetch(
+  //   //   `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`,
+  //   //   {
+  //   //     method: "POST",
+  //   //     body: formData,
+  //   //   }
+  //   // );
+  //   // const result = await upload.json();
+  //   // const secureUrl = result.secure_url; TODO: ambos devem ir no payload
+  //   // const publicId = result.public_id; TODO: ambos devem ir no payload
+  //   // setValue('fotoVeiculoSecureUrl', secureUrl)
+  //   // setValue('fotoVeiculoPublicId', publicId)
+  // };
+
+  // TODO: essa func deve ser chamada no submit do form para o backend, pegar as urls e enviar no PL
+  // const uploadMany = async (files: File[]) => {
+  // const promises = files.map(async (file) => {
+  //   const sig = await getSignature();
+  //   const fd = new FormData();
+  //   fd.append("file", file);
+  //   fd.append("timestamp", sig.timestamp);
+  //   fd.append("signature", sig.signature);
+  //   fd.append("api_key", sig.apiKey);
+  //   fd.append("folder", sig.folder);
+  //   const res = await fetch(
+  //     `https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload`,
+  //     { method: "POST", body: fd }
+  //   );
+  //   return res.json();
+  // });
+  // return await Promise.all(promises);
+  // };
+
+  // const handleOpenVehiclesImgsDialog = () => {
+  //   setOpenVehicleImgsDialog(true);
+  // };
+
+  return (
+    <>
+      <Stack spacing={6}>
+        <Paper
+          component='form'
+          noValidate
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
+          sx={{ py: 2, pb: 2 }}
+        >
+          <CustomTabs
+            value={tabValue}
+            handleChange={handleChange}
+            tabLabels={TABS_VALUES_VEHICLE}
+          />
+
+          {/* GERAIS */}
+          <CustomTabPanel value={tabValue} index={0}>
+            <Grid container p={2} spacing={6}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <AutocompleteShowNameGetId
+                  control={control}
+                  data={(regioesBase as Required<TRegionSchema>[]) || []}
+                  label='Região Base'
+                  name='regiaoBaseId'
+                  disabled={shouldDisable}
+                />
+
+                {/* <Controller
+                  name='regiaoBaseId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl fullWidth error={!!fieldState.error}>
+                      <InputLabel>Região Base</InputLabel>
+                      <Select
+                        {...field}
+                        value={Number(field.value) || ''}
+                        disabled={shouldDisable}
+                        label='Região Base'
+                      >
+                        {regioesBase?.map(({ nome, id }) => (
+                          <MenuItem key={nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                /> */}
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='clienteBaseId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Cliente Base</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        value={field.value || ''}
+                        label='Cliente Base'
+                        required
+                      >
+                        {clientes?.map(({ id, nome }) => (
+                          <MenuItem key={nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='locadoraId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Locadora</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        label='Locadora'
+                        value={field.value ?? ''}
+                      >
+                        <MenuItem sx={{ paddingBlock: '1rem' }} value=''>
+                          <em> </em>
+                        </MenuItem>
+                        {locadoras?.map(({ cnpj, id, nome }) => (
+                          <MenuItem key={`${id}-${cnpj}-${nome}`} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='tipoVinculoId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Vínculo</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        label='Vínculo'
+                        required
+                        value={field.value || ''}
+                      >
+                        {tiposVinculo?.map(({ id, nome }) => (
+                          <MenuItem key={id + '-' + nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  label='Data Início Operação'
+                  name='dataInicioOperacao'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  label='Data fim Operação'
+                  name='dataFimOperacao'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='tipoDeVeiculoId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Tipo Veículo</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        label='Tipo Veículo'
+                        value={field.value || ''}
+                      >
+                        {tiposVeiculo?.map(({ id, nome }) => (
+                          <MenuItem key={nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='categoriaMeliId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Categoria Meli</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        value={field.value || ''}
+                        label='Categoria Meli'
+                      >
+                        <MenuItem sx={{ paddingBlock: '1rem' }} value=''>
+                          <em> </em>
+                        </MenuItem>
+                        {categoriasMeli?.map(({ id, nome }) => (
+                          <MenuItem key={id + '-' + nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <MoneyInput
+                  control={control}
+                  label='Valor Implemento'
+                  name='valorImplemento'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='ativo'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Ativo</InputLabel>
+                      <Select
+                        {...field}
+                        value={initialValueTrueOrFalseField(field.value)}
+                        disabled={shouldDisable}
+                        label='Ativo'
+                        onChange={(e) =>
+                          field.onChange(e.target.value === 'true')
+                        }
+                      >
+                        {STATUS_DO_VEICULO.map(({ nome, status }) => (
+                          <MenuItem key={nome} value={String(status)}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              {/* <Grid size={{ xs: 12, md: 4 }}>
+                <AutocompleteShowNameGetId
+                  control={control}
+                  data={tiposDeServico || []}
+                  label='Tipo Serviço'
+                  name='tipoDeServico'
+                  disabled={shouldDisable}
+                />
+              </Grid> */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='tipoDocumento'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Tipo Documento</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        value={field.value || ''}
+                        label='Tipo Documento'
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                          setValue('cnpj', undefined);
+                          setValue('cpf', undefined);
+                        }}
+                      >
+                        {TIPO_DOCUMENTO.map((tipo) => (
+                          <MenuItem key={tipo} value={tipo}>
+                            {tipo}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                {renderTipoDoc()}
+                {/* <Box
+                  sx={{
+                    width: tipoDoc === 'CNPJ' ? 'auto' : 0,
+                    height: tipoDoc === 'CNPJ' ? 'auto' : 0,
+                    overflow: tipoDoc === 'CNPJ' ? 'visible' : 'hidden',
+                  }}
+                >
+                  <CNPJInput
+                    name='cnpj'
+                    control={control}
+                    label='XX.XXX.XXX/XXXX-XX'
+                    disabled={shouldDisable}
+                    required
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    width: tipoDoc === 'CPF' ? 'auto' : 0,
+                    height: tipoDoc === 'CPF' ? 'auto' : 0,
+                    overflow: tipoDoc === 'CPF' ? 'visible' : 'hidden',
+                  }}
+                >
+                  <CPFInput
+                    name='cpf'
+                    control={control}
+                    label='XXX.XXX.XXX-XX'
+                    disabled={shouldDisable}
+                    required
+                  />
+                </Box> */}
+              </Grid>
+
+              <Grid size={12}>
+                <Controller
+                  name='observacoes'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Observações'
+                      multiline
+                      rows={3}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
+                      slotProps={{ inputLabel: { shrink: !!field.value } }}
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </CustomTabPanel>
+
+          {/* DOCS */}
+          <CustomTabPanel value={tabValue} index={1}>
+            <Grid container p={2} spacing={6}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='nomeProprietario'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Nome Proprietário'
+                      error={!!fieldState.error}
+                      slotProps={{
+                        inputLabel: { shrink: !!field.value },
+                        htmlInput: { style: { textTransform: 'uppercase' } },
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  label='Data Emissão GR'
+                  name='dataEmissaoGR'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  label='Data Vencimento GR'
+                  name='dataVencimentoGR'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='placa'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Placa'
+                      error={!!fieldState.error}
+                      slotProps={{ inputLabel: { shrink: !!field.value } }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const formatted = f.formatLicensePlate(value);
+                        setValue('placa', formatted);
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <YearInput
+                  control={control}
+                  label='Exercício CRLV'
+                  name='exercicioCrlv'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  label='Vencimento CRLV'
+                  name='vencimentoCrlv'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='renavam'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Renavam'
+                      error={!!fieldState.error}
+                      slotProps={{ inputLabel: { shrink: !!field.value } }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const formatted = f.formatRenavam(value);
+                        setValue('renavam', formatted);
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Button
+                  component='label'
+                  role={undefined}
+                  variant='contained'
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+                  disabled={shouldDisable}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Upload Fotos Veículo
+                  <VisuallyHiddenInput
+                    type='file'
+                    multiple
+                    accept='image/jpg, image/jpeg'
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files ?? []);
+                      if (files.length === 0) return;
+
+                      const areTypesValid = validateImgTypes(files);
+
+                      if (!areTypesValid) {
+                        toaster.addNotification(
+                          'Somente imagens JPG ou JPEG são permitidas.',
+                          {
+                            variant: 'error',
+                          }
+                        );
+                        return;
+                      }
+
+                      const areImgsSizeValid = validateImgSizes(files);
+
+                      if (!areImgsSizeValid) {
+                        toaster.addNotification(
+                          'Cada imagem deve ter no máximo 2mb.',
+                          {
+                            variant: 'error',
+                          }
+                        );
+                        return;
+                      }
+
+                      setVeiculoImgsFile(files);
+                    }}
+                  />
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Button
+                  component='label'
+                  role={undefined}
+                  variant='contained'
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+                  disabled={shouldDisable}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Upload CRLV
+                  <VisuallyHiddenInput
+                    type='file'
+                    multiple
+                    accept='application/pdf'
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files ?? []);
+                      if (files.length === 0) return;
+
+                      const areTypesValid = files.every(
+                        (file) => file.type === 'application/pdf'
+                      );
+
+                      if (!areTypesValid) {
+                        toaster.addNotification(
+                          'Somente arquivos PDF são permitidos.',
+                          { variant: 'error' }
+                        );
+                        return;
+                      }
+
+                      // OPTIONAL: size validation (example: 5MB)
+                      const maxSizeInBytes = 5 * 1024 * 1024;
+                      const areSizesValid = files.every(
+                        (file) => file.size <= maxSizeInBytes
+                      );
+
+                      if (!areSizesValid) {
+                        toaster.addNotification(
+                          'Cada PDF deve ter no máximo 5MB.',
+                          { variant: 'error' }
+                        );
+                        return;
+                      }
+
+                      setCrlvFiles(files); // your state setter
+                    }}
+                  />
+                </Button>
+              </Grid>
+              {/* <Grid size={{ xs: 12, md: 4 }}>
+                <Button
+                  component='label'
+                  role={undefined}
+                  variant='contained'
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+                  disabled={shouldDisable}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Upload CRLV
+                  <VisuallyHiddenInput
+                    type='file'
+                    onChange={(event) => console.log(event.target.files)}
+                  />
+                </Button>
+              </Grid> */}
+
+              <Grid size={{ xs: 12, md: 12 }}>
+                <Grid container spacing={1}>
+                  <Grid size={{ xs: 12 }}>
+                    <ExpandRowDocs
+                      content={imagesPreview}
+                      title='Fotos do Veículo'
+                    />
+                  </Grid>
+                  {/* <Grid size={{ xs: 12 }}>
+                    <ExpandRowDocs title='CRLV' content={IMG_VEICULO_MOCK} />
+                  </Grid> */}
+                </Grid>
+              </Grid>
+              {/* <Grid size={{ xs: 12, md: 12 }}>
+              </Grid> */}
+
+              {/* <Grid container size={{ xs: 12 }}>
+                <Grid spacing={1} container size={{ xs: 12, md: 6 }}>
+                  <Button
+                    component='label'
+                    role={undefined}
+                    variant='contained'
+                    tabIndex={-1}
+                    startIcon={<CloudUploadIcon />}
+                    disabled={shouldDisable}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Upload CRLV
+                    <VisuallyHiddenInput
+                      type='file'
+                      onChange={(event) => console.log(event.target.files)}
+                    />
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    color='warning'
+                    tabIndex={-1}
+                    disabled={shouldDisable}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Visualizar CRLV
+                  </Button>
+                </Grid>
+                <Grid spacing={1} container size={{ xs: 12, md: 6 }}>
+                  <Button
+                    component='label'
+                    role={undefined}
+                    variant='contained'
+                    tabIndex={-1}
+                    startIcon={<CloudUploadIcon />}
+                    disabled={shouldDisable}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Upload Fotos Veículo
+                    <VisuallyHiddenInput
+                      type='file'
+                      multiple
+                      accept='image/png, image/jpeg'
+                      onChange={(event) => {
+                        const files = Array.from(event.target.files ?? []);
+                        if (files.length === 0) return;
+
+                        const areTypesValid = validateImgTypes(files);
+
+                        if (!areTypesValid) {
+                          toaster.addNotification(
+                            'Somente imagens JPG ou JPEG são permitidas.',
+                            {
+                              variant: 'error',
+                            }
+                          );
+                          return;
+                        }
+
+                        const areImgsSizeValid = validateImgSizes(files);
+
+                        if (!areImgsSizeValid) {
+                          toaster.addNotification(
+                            'Cada imagem deve ter no máximo 2mb.',
+                            {
+                              variant: 'error',
+                            }
+                          );
+                          return;
+                        }
+
+                        setVeiculoImgs(files);
+                      }}
+                    />
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    color='warning'
+                    tabIndex={-1}
+                    disabled={shouldDisable}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                    onClick={handleOpenVehiclesImgsDialog}
+                  >
+                    Visualizar fotos do Veículo
+                  </Button>
+                </Grid>
+              </Grid> */}
+            </Grid>
+          </CustomTabPanel>
+
+          {/* VEHICLE DATA */}
+          <CustomTabPanel value={tabValue} index={2}>
+            <Grid container p={2} spacing={6}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='motorId'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl
+                      disabled={shouldDisable}
+                      fullWidth
+                      error={!!fieldState.error}
+                    >
+                      <InputLabel>Motor</InputLabel>
+                      <Select
+                        {...field}
+                        disabled={shouldDisable}
+                        label='Motor'
+                        value={field.value || ''}
+                      >
+                        {TIPOS_MOTOR.map(({ id, nome }) => (
+                          <MenuItem key={id + '-' + nome} value={id}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <YearInput
+                  control={control}
+                  label='Ano Veículo'
+                  name='anoVeiculo'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                {isLoadingMarcasCarro ? (
+                  <Skeleton />
+                ) : (
+                  <Controller
+                    name='marcaId'
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <FormControl
+                        disabled={shouldDisable}
+                        fullWidth
+                        error={!!fieldState.error}
+                      >
+                        <InputLabel>Marca</InputLabel>
+                        <Select
+                          {...field}
+                          disabled={shouldDisable}
+                          label='Marca'
+                          value={field.value || ''}
+                        >
+                          {marcasCarro?.map(({ nome, id }) => (
+                            <MenuItem key={nome} value={id}>
+                              {nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                )}
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='modelo'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Modelo'
+                      error={!!fieldState.error}
+                      slotProps={{
+                        inputLabel: { shrink: !!field.value },
+                        htmlInput: { style: { textTransform: 'uppercase' } },
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='chassi'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Chassi'
+                      error={!!fieldState.error}
+                      slotProps={{ inputLabel: { shrink: !!field.value } }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const formatted = f.formatChassi(value);
+                        setValue('chassi', formatted);
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='anoFabricacao'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Ano Fabricação'
+                      placeholder='AAAA'
+                      error={!!fieldState.error}
+                      // helperText={fieldState.error?.message}
+                      // slotProps={{ inputLabel: { shrink: !!field.value } }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const formatted = f.formatYYYY(value);
+                        setValue('anoFabricacao', Number(formatted));
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                {isLoadingUFs ? (
+                  <Skeleton />
+                ) : (
+                  <Controller
+                    name='ufDetranId'
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <FormControl fullWidth error={!!fieldState.error}>
+                        <InputLabel>UF Detran</InputLabel>
+                        <Select
+                          {...field}
+                          disabled={shouldDisable}
+                          label='UF Detran'
+                          value={field.value || ''}
+                        >
+                          {ufs?.map(({ sigla, id }) => (
+                            <MenuItem key={sigla + '-' + id} value={sigla}>
+                              {sigla}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                )}
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                {isLoadingUFs ? (
+                  <Skeleton />
+                ) : (
+                  <Controller
+                    name='localidadeVeiculoId'
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <FormControl fullWidth error={!!fieldState.error}>
+                        <InputLabel>Localidade Veículo</InputLabel>
+                        <Select
+                          {...field}
+                          disabled={shouldDisable}
+                          label='Localidade Veículo'
+                          value={field.value || ''}
+                        >
+                          {ufs?.map(({ nome, id }) => (
+                            <MenuItem key={nome + '-' + id} value={nome}>
+                              {nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                )}
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='gravame'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl fullWidth error={!!fieldState.error}>
+                      <InputLabel>Gravame</InputLabel>
+                      <Select
+                        {...field}
+                        value={initialValueTrueOrFalseField(field.value)}
+                        disabled={shouldDisable}
+                        label='Gravame'
+                        onChange={(e) => {
+                          setValue(
+                            'gravame',
+                            JSON.parse(e.target.value as string)
+                          );
+                        }}
+                      >
+                        {TRUE_OU_FALSE.map(({ nome, value }) => (
+                          <MenuItem key={nome} value={String(value)}>
+                            {nome}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Controller
+                  name='cor'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      {...field}
+                      value={field.value || ''}
+                      disabled={shouldDisable}
+                      fullWidth
+                      label='Cor'
+                      error={!!fieldState.error}
+                      slotProps={{
+                        htmlInput: { style: { textTransform: 'uppercase' } },
+                      }}
+                      // helperText={fieldState.error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <DateInput
+                  control={control}
+                  name='dataGarantia'
+                  label='Data Garantia'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <MoneyInput
+                  control={control}
+                  label='Valor Veículo'
+                  name='valorVeiculo'
+                  disabled={shouldDisable}
+                />
+              </Grid>
+            </Grid>
+          </CustomTabPanel>
+
+          {tabValue === TABS_VALUES_VEHICLE.length - 1 && (
+            <FormButtons shouldDisable={shouldDisable} />
+          )}
+        </Paper>
+      </Stack>
+    </>
+  );
+};

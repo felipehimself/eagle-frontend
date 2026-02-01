@@ -1,0 +1,1 @@
+- No cadastro da Rota, precisa ter um campo Tipo Vínculo: Agregado ou Frota

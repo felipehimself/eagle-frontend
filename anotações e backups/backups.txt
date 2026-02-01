@@ -1,0 +1,130 @@
+{
+  /* <Controller
+    name='dataFimOperacao'
+    control={control}
+    render={({ field, fieldState }) => (
+      <TextField
+        {...field}
+        value={field.value || ''}
+        disabled={shouldDisable}
+        fullWidth
+        label='Data fim Operação'
+        placeholder='DD/MM/AAAA'
+        error={!!fieldState.error}
+        // helperText={fieldState.error?.message}
+        // slotProps={{ inputLabel: { shrink: !!field.value } }}
+        onChange={(e) => {
+          const value = e.target.value;
+          const formatted = f.formatDate(value);
+          setValue('dataFimOperacao', formatted);
+        }}
+      />
+    )}
+  /> */
+}
+
+
+{/* <Controller
+  name='valorDoImplemento'
+  control={control}
+  render={({ field, fieldState }) => (
+    <FormControl fullWidth error={!!fieldState.error}>
+      <InputLabel htmlFor='outlined-adornment-amount'>
+        Valor Implemento
+      </InputLabel>
+      <OutlinedInput
+        {...field}
+        label='Valor Implemento'
+        value={field.value || ''}
+        disabled={shouldDisable}
+        id='outlined-adornment-amount'
+        startAdornment={
+          <InputAdornment position='start'>R$</InputAdornment>
+        }
+        onChange={(e) => {
+          const value = e.target.value;
+          const formatted = f.formatMoney(value);
+          setValue('valorDoImplemento', formatted);
+        }}
+      />
+
+      <FormHelperText error></FormHelperText>
+    </FormControl>
+  )}
+/> */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {/* <Controller
+    name='tipoDeServico'
+    control={control}
+    render={({ field, fieldState }) => (
+      <Autocomplete
+        {...field}
+        value={
+          serviceTypes?.find(
+            (option) => String(option.id) === String(field.value)
+          ) || null
+        }
+        noOptionsText='Não encontrado'
+        size='small'
+        onChange={(_, newValue) => {
+          // Store the ID instead of the object
+          field.onChange(newValue ? newValue.id : '');
+        }}
+        options={serviceTypes || []}
+        getOptionLabel={(option) => option.nome || ''}
+        isOptionEqualToValue={(option, value) =>
+          option.id === value.id
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label='Tipos Serviço'
+            error={!!fieldState.error}
+          />
+        )}
+      />
+    )}
+  /> */}
+
+
+// type TDriverFormComponentProps = {
+//   onSave: (data: TVehicleSchema) => void;
+//   initialData?: TVehicleSchema | undefined;
+//   shouldDisable?: boolean;
+//   isLoading: boolean;
+// };
+
+
+<Controller
+  name='cnpj'
+  control={control}
+  render={({ field, fieldState }) => (
+    <TextField
+      {...field}
+      value={field.value || ''}
+      disabled={props.isSubmitting || props.shouldDisable}
+      fullWidth
+      label='CNPJ'
+      placeholder='XX.XXX.XXX/XXXX-XX'
+      error={!!fieldState.error}
+      onChange={(e) => {
+        const value = e.target.value;
+        const formatted = f.formatCNPJ(value);
+        setValue('cnpj', formatted);
+      }}
+    />
+  )}
+/>
