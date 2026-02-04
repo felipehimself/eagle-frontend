@@ -55,6 +55,7 @@
 [ok] Se clicar em editar, mudar campos e clicar em editar novamente, ele desabilita a edição e mantém a alteração no campo, deve voltar com o estado inicial no toggle do editar, ver tela de veiculo e outras telas, cadastro de regiao e cliente, ambos no edit-veiculo, edit-client e edit-region
 [ok] Colocar tooltip nos icons de deletar imagem e pdf "Remover"
 
+[ ] Durante login, dar disabled no checkbox enquando faz a requisicao
 [ ] Ano Exercicio CRLV no pode nunca ser maior que o ano atual, colocar limitar no input do front
 [ ] Ano veículo n pode nunca ser maior que o ano atual + 1, colocar limitar no input
 [ ] Ano fabricacao n pode nunca ser maior que o ano atual colocar limitar no input
