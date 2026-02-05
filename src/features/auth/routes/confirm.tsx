@@ -1,12 +1,15 @@
+import { useNotification } from '@/hooks/use-notification';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useConfirmAuth } from '../api/post-confirm-auth';
-
 export const Confirm = () => {
   const [values, setValues] = useState(['', '', '', '']);
   const [searchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+  const toaster = useNotification();
 
   const userId = searchParams.get('userId');
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
@@ -29,21 +32,34 @@ export const Confirm = () => {
     }
   };
 
-  const { mutate: postConfirmAuth, isLoading: isLoadingConfirmAuth } =
-    useConfirmAuth();
+  const {
+    mutateAsync: postConfirmAuthAsync,
+    isLoading: isLoadingConfirmAuthAsync,
+    isError: isErrorConfirmAuthAsync,
+  } = useConfirmAuth();
 
-  const handleConfirmAuth = () => {
+  const handleConfirmAuth = async () => {
     if (!userId || values.some((value) => !value)) return;
 
-    postConfirmAuth({
+    await postConfirmAuthAsync({
       usuarioId: userId!,
       codConfirmacao: values.join(''),
     });
+
+    if (!isErrorConfirmAuthAsync) {
+      toaster.addNotification('Conta confirmada, estamos redirecionando', {
+        variant: 'success',
+      });
+
+      setTimeout(() => {
+        navigate('/auth/signin');
+      }, 3000);
+    }
   };
 
   const disable = useMemo(() => {
-    return values.some((value) => !value) || isLoadingConfirmAuth;
-  }, [values, isLoadingConfirmAuth]);
+    return values.some((value) => !value) || isLoadingConfirmAuthAsync;
+  }, [values, isLoadingConfirmAuthAsync]);
 
   // chamar API
   // se api der OK, mudar mensagem (setMsg) para, "Conta confirmada, estamos redirecionando", pequeno setTimeout navigate para tela login
@@ -120,7 +136,7 @@ export const Confirm = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
             {values.map((value, index) => (
               <TextField
-                disabled={isLoadingConfirmAuth}
+                disabled={isLoadingConfirmAuthAsync}
                 key={index}
                 autoFocus={index === 0}
                 inputRef={(el) => (inputsRef.current[index] = el)}
@@ -143,7 +159,7 @@ export const Confirm = () => {
             fullWidth
             size='large'
             type='submit'
-            disabled={disable || isLoadingConfirmAuth}
+            disabled={disable}
             onClick={handleConfirmAuth}
             typeof='button'
           >

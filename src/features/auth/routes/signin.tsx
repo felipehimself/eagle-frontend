@@ -26,7 +26,7 @@ export const Signin = () => {
   const theme = useTheme();
 
   const [remindEmail, setRemindEmail] = useState(
-    localStorage.getItem('eagle_email') ? true : false
+    !!localStorage.getItem('eagle_email'),
   );
   const [showPassword, setShowPassword] = useState(false);
   const {
