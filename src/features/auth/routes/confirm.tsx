@@ -35,18 +35,17 @@ export const Confirm = () => {
   const {
     mutateAsync: postConfirmAuthAsync,
     isLoading: isLoadingConfirmAuthAsync,
-    isError: isErrorConfirmAuthAsync,
   } = useConfirmAuth();
 
   const handleConfirmAuth = async () => {
     if (!userId || values.some((value) => !value)) return;
 
-    await postConfirmAuthAsync({
-      usuarioId: userId!,
-      codConfirmacao: values.join(''),
-    });
+    try {
+      await postConfirmAuthAsync({
+        usuarioId: userId,
+        codConfirmacao: values.join(''),
+      });
 
-    if (!isErrorConfirmAuthAsync) {
       toaster.addNotification('Conta confirmada, estamos redirecionando', {
         variant: 'success',
       });
@@ -54,6 +53,14 @@ export const Confirm = () => {
       setTimeout(() => {
         navigate('/auth/signin');
       }, 3000);
+    } catch (error: unknown) {
+      toaster.addNotification(
+        // @ts-expect-error message está definido
+        error?.response?.data?.message || 'Erro ao confirmar conta',
+        {
+          variant: 'error',
+        },
+      );
     }
   };
 

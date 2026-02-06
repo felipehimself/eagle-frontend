@@ -1,8 +1,6 @@
 import { API_ROUTES } from '@/constants/api';
-import { useNotification } from '@/hooks/use-notification';
 import { axiosInstance } from '@/lib/axios';
 import { MutationConfig } from '@/lib/react-query';
-import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 
 export type TPayload = {
@@ -26,18 +24,7 @@ type UseConfirmAuthOptions = {
 };
 
 export const useConfirmAuth = ({ config }: UseConfirmAuthOptions = {}) => {
-  const toaster = useNotification();
-
   return useMutation({
-    onError: (e: AxiosError) => {
-      toaster.addNotification(
-        // @ts-expect-error message está definido
-        e?.response?.data?.message || 'Erro ao confirmar conta',
-        {
-          variant: 'error',
-        },
-      );
-    },
     ...config,
     mutationFn: postConfirmAuth,
   });
