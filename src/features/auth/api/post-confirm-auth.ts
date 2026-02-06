@@ -30,10 +30,13 @@ export const useConfirmAuth = ({ config }: UseConfirmAuthOptions = {}) => {
 
   return useMutation({
     onError: (e: AxiosError) => {
-      console.log(e);
-      toaster.addNotification('Erro ao confirmar conta', {
-        variant: 'error',
-      });
+      toaster.addNotification(
+        // @ts-expect-error message está definido
+        e?.response?.data?.message || 'Erro ao confirmar conta',
+        {
+          variant: 'error',
+        },
+      );
     },
     ...config,
     mutationFn: postConfirmAuth,

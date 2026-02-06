@@ -31,14 +31,14 @@ export const useSignin = ({ config }: UseSigninOptions = {}) => {
   const toaster = useNotification();
 
   return useMutation({
-    // onMutate: async ({ destination }) => {},
-    // onSuccess: () => {},
-
     onError: (e: AxiosError) => {
-      console.log(e);
-      toaster.addNotification('Erro ao efetuar login', {
-        variant: 'error',
-      });
+      toaster.addNotification(
+        // @ts-expect-error estará definidoee
+        e?.response?.data?.message || 'Erro ao efetuar login',
+        {
+          variant: 'error',
+        },
+      );
     },
     ...config,
 

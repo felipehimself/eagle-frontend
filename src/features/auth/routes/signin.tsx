@@ -140,6 +140,7 @@ export const Signin = () => {
             <Checkbox
               checked={remindEmail}
               onChange={(e) => handleRemindEmail(e.target.checked)}
+              disabled={isLoadingSigning}
             />
           }
           label='Lembrar e-mail'
