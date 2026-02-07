@@ -12,6 +12,7 @@ export const createClientPayload = (data: TClientSchema): TClient => {
   return {
     ...(data.id && { id: data.id }),
     pessoa: {
+      ...(data.id && { id: data.id }),
       nome: data?.nome?.toUpperCase() || null,
       email: data?.email?.toLowerCase() || null,
       telefone: sanitizedTelefone || null,

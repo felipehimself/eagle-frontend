@@ -29,10 +29,22 @@ export const EditClient = () => {
     putClient(payload);
   };
 
+  const handleToggleEditBtn = () => {
+    setShouldDisable((prev) => {
+      const next = !prev;
+
+      if (prev === false && next === true) {
+        formRef.current?.resetForm();
+      }
+
+      return next;
+    });
+  };
+
   return (
     <Stack spacing={6}>
       <PageHeader
-        handleEdit={() => setShouldDisable((prev) => !prev)}
+        handleEdit={handleToggleEditBtn}
         subtitle={shouldDisable ? 'Dados do cadastro' : 'Editando cadastro'}
         title='Clientes'
         showBackButton

@@ -7,16 +7,15 @@ import { TRegionSchema } from '../types/regions.type';
 
 export const AddRegion = () => {
   const [formKey, setFormKey] = useState(1);
-  const {
-    mutateAsync: postRegionAsync,
-    isLoading: isPostRegionLoading,
-    isError: isPostRegionError,
-  } = usePostRegion();
+  const { mutateAsync: postRegionAsync, isLoading: isPostRegionLoading } =
+    usePostRegion();
 
   const handleSubmit = async (data: TRegionSchema) => {
-    await postRegionAsync(data);
-    if (!isPostRegionError) {
+    try {
+      await postRegionAsync(data);
       setFormKey((prev) => prev + 1);
+    } catch (e) {
+      console.log(e);
     }
   };
 
